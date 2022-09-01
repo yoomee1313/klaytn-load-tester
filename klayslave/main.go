@@ -7,6 +7,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/klaytn/klaytn-load-tester/klayslave/klapTC"
+	"github.com/klaytn/klaytn/params"
 	"log"
 	"math/big"
 	"os"
@@ -67,7 +69,6 @@ import (
 	klay "github.com/klaytn/klaytn/client"
 	"github.com/klaytn/klaytn/common"
 	"github.com/klaytn/klaytn/crypto"
-	"github.com/klaytn/klaytn/params"
 	"github.com/myzhan/boomer"
 )
 
@@ -1150,6 +1151,23 @@ func initTCList() (taskSet []*ExtendedTask) {
 		EndPint: gEndpoint,
 	})
 
+	taskSet = append(taskSet, &ExtendedTask{
+		Name:    "klapBalanceOfCallTC",
+		Weight:  10,
+		Fn:      klapTC.KlapBalanceOfCall,
+		Init:    klapTC.Init,
+		AccGrp:  accGrpForSignedTx,
+		EndPint: gEndpoint,
+	})
+
+	taskSet = append(taskSet, &ExtendedTask {
+		Name:    "klapAppCall",
+		Weight:  10,
+		Fn:      klapTC.KlapAppCall,
+		Init:    klapTC.Init,
+		AccGrp:  accGrpForSignedTx,
+		EndPint: gEndpoint,
+	})
 	return taskSet
 }
 
@@ -1223,14 +1241,14 @@ func main() {
 	}
 
 	// Import/Unlock Account on the node if there is a task to use unsigned account group.
-	for _, task := range filteredTask {
-		if task.AccGrp[0] == accGrpForUnsignedTx[0] {
-			for _, acc := range task.AccGrp {
-				acc.ImportUnLockAccount(gEndpoint)
-			}
-			break // to import/unlock once.
-		}
-	}
+	//for _, task := range filteredTask {
+	//	if task.AccGrp[0] == accGrpForUnsignedTx[0] {
+	//		for _, acc := range task.AccGrp {
+	//			acc.ImportUnLockAccount(gEndpoint)
+	//		}
+	//		break // to import/unlock once.
+	//	}
+	//}
 
 	// Charge Accounts
 	accGrp := make(map[common.Address]*account.Account)
@@ -1245,7 +1263,7 @@ func main() {
 	}
 
 	if len(chargeValue.Bits()) != 0 {
-		prepareTestAccountsAndContracts(accGrp)
+		//prepareTestAccountsAndContracts(accGrp)
 	}
 
 	// After charging accounts, cut the slice to the desired length, calculated by ActiveAccountPercent.
@@ -1259,7 +1277,7 @@ func main() {
 			numActiveAccounts = 1
 		}
 		task.AccGrp = task.AccGrp[:numActiveAccounts]
-		prepareERC721Transfer(task.AccGrp)
+		//prepareERC721Transfer(task.AccGrp)
 	}
 
 	if len(filteredTask) == 0 {
