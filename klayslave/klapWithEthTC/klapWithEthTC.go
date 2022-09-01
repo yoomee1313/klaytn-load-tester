@@ -84,6 +84,7 @@ func KlapBalanceOfCallWithEthClient() {
 	// To test this, you need to update submodule and build executable file.
 	// ./ethTxGenerator endpoint eth_call fromAddress toAddress gas gasPrice value data [blockNumber]
 	cmd := exec.Command(executablePath, endPoint, "eth_call", fromAccount.String(), contractAddr.String(), gasPrice.String(), gas, value, hex.EncodeToString(data))
+	// log.Printf("[TC] KlapWithEthTC: executablePath=%v, endPoint:%v, eth.call({ from:%v, contract:%v, gasPrice:%v, gas:%v, value:%v, data:0x%v }) \n", executablePath, endPoint, fromAccount.String(), contractAddr.String(), gasPrice, gas, value, hex.EncodeToString(data))
 	elapsed := boomer.Now() - start
 
 	result, err := cmd.CombinedOutput()
@@ -96,7 +97,7 @@ func KlapBalanceOfCallWithEthClient() {
 		boomer.Events.Publish("request_failure", "http", "KlapWithEthTC to "+endPoint, elapsed, err.Error())
 		cli.Close()
 	} else {
-		log.Printf("[TC] KlapWithEthTC: Failed to call eth_call, err=%v, from:%x\n", err, fromAccount)
+		log.Printf("[TC] KlapWithEthTC: Failed to call eth_call, err=%v, eth.call({ from:%v, contract:%v, gasPrice:%v, gas:%v, value:%v, data:0x%v })\n", err, fromAccount.String(), contractAddr.String(), gasPrice, gas, value, hex.EncodeToString(data))
 		boomer.Events.Publish("request_success", "http", "KlapWithEthTC to "+endPoint, elapsed, int64(10))
 		cliPool.Free(cli)
 	}
@@ -116,6 +117,7 @@ func KlapAppCallWithEthClient() {
 	// To test this, you need to update submodule and build executable file.
 	// ./ethTxGenerator endpoint eth_call fromAddress toAddress gas gasPrice value data [blockNumber]
 	cmd := exec.Command(executablePath, endPoint, "eth_call", fromAccount.String(), contractAddr.String(), gasPrice.String(), gas, value, hex.EncodeToString(data))
+	// log.Printf("[TC] KlapWithEthTC: executablePath=%v, endPoint:%v, eth.call({ from:%v, contract:%v, gasPrice:%v, gas:%v, value:%v, data:0x%v }) \n", executablePath, endPoint, fromAccount.String(), contractAddr.String(), gasPrice, gas, value, hex.EncodeToString(data))
 	elapsed := boomer.Now() - start
 
 	result, err := cmd.CombinedOutput()
@@ -125,11 +127,11 @@ func KlapAppCallWithEthClient() {
 
 	strResult := string(result[:])
 	if strings.Contains(strResult, "Error") {
-		boomer.Events.Publish("request_success", "http", "KlapAppWithEthTC to "+endPoint, elapsed, int64(10))
-		cliPool.Free(cli)
-	} else {
-		log.Printf("[TC] KlapAppWithEthTC: Failed to call eth_call, err=%v, from:%x\n", err, fromAccount)
+		log.Printf("[TC] KlapAppWithEthTC: Failed to call eth_call, err=%v, eth.call({ from:%v, contract:%v, gasPrice:%v, gas:%v, value:%v, data:0x%v })\n", err, fromAccount.String(), contractAddr.String(), gasPrice, gas, value, hex.EncodeToString(data))
 		boomer.Events.Publish("request_failure", "http", "KlapAppWithEthTC to "+endPoint, elapsed, err.Error())
 		cli.Close()
+	} else {
+		boomer.Events.Publish("request_success", "http", "KlapAppWithEthTC to "+endPoint, elapsed, int64(10))
+		cliPool.Free(cli)
 	}
 }
