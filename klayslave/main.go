@@ -7,8 +7,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/klaytn/klaytn-load-tester/klayslave/klapTC"
-	"github.com/klaytn/klaytn/params"
 	"log"
 	"math/big"
 	"os"
@@ -16,6 +14,10 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/klaytn/klaytn-load-tester/klayslave/klapTC"
+	"github.com/klaytn/klaytn-load-tester/klayslave/klapWithEthTC"
+	"github.com/klaytn/klaytn/params"
 
 	"github.com/klaytn/klaytn-load-tester/klayslave/account"
 	"github.com/klaytn/klaytn-load-tester/klayslave/blockbench/analyticTC"
@@ -1160,7 +1162,7 @@ func initTCList() (taskSet []*ExtendedTask) {
 		EndPint: gEndpoint,
 	})
 
-	taskSet = append(taskSet, &ExtendedTask {
+	taskSet = append(taskSet, &ExtendedTask{
 		Name:    "klapAppCall",
 		Weight:  10,
 		Fn:      klapTC.KlapAppCall,
@@ -1168,6 +1170,25 @@ func initTCList() (taskSet []*ExtendedTask) {
 		AccGrp:  accGrpForSignedTx,
 		EndPint: gEndpoint,
 	})
+
+	taskSet = append(taskSet, &ExtendedTask{
+		Name:    "klapBalanceOfCallWithEthClientTC",
+		Weight:  10,
+		Fn:      klapWithEthTC.KlapBalanceOfCallWithEthClient,
+		Init:    klapWithEthTC.Init,
+		AccGrp:  accGrpForSignedTx,
+		EndPint: gEndpoint,
+	})
+
+	taskSet = append(taskSet, &ExtendedTask{
+		Name:    "klapAppCallWithEthClientTC",
+		Weight:  10,
+		Fn:      klapWithEthTC.KlapAppCallWithEthClient,
+		Init:    klapWithEthTC.Init,
+		AccGrp:  accGrpForSignedTx,
+		EndPint: gEndpoint,
+	})
+
 	return taskSet
 }
 
