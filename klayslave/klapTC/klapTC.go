@@ -131,11 +131,11 @@ func KlapAppCall() {
 	elapsed := boomer.Now() - start
 
 	if err == nil {
-		boomer.Events.Publish("request_success", "http", "klapTC to "+endPoint, elapsed, int64(10))
+		boomer.Events.Publish("request_success", "http", "klapAppCallTC to "+endPoint, elapsed, int64(10))
 		cliPool.Free(cli)
 	} else {
 		log.Printf("[TC] klapAppTC: Failed to call klay_call, err=%v, from:%x\n", err, fromAccount)
-		boomer.Events.Publish("request_failure", "http", "klapAppTC to "+endPoint, elapsed, err.Error())
+		boomer.Events.Publish("request_failure", "http", "klapAppCallTC to "+endPoint, elapsed, err.Error())
 		cli.Close()
 	}
 }
