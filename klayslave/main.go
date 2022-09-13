@@ -7,6 +7,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/klaytn/klaytn-load-tester/klayslave/klapTC"
+	"github.com/klaytn/klaytn/params"
 	"log"
 	"math/big"
 	"os"
@@ -67,7 +69,6 @@ import (
 	klay "github.com/klaytn/klaytn/client"
 	"github.com/klaytn/klaytn/common"
 	"github.com/klaytn/klaytn/crypto"
-	"github.com/klaytn/klaytn/params"
 	"github.com/myzhan/boomer"
 )
 
@@ -1150,6 +1151,23 @@ func initTCList() (taskSet []*ExtendedTask) {
 		EndPint: gEndpoint,
 	})
 
+	taskSet = append(taskSet, &ExtendedTask{
+		Name:    "klapBalanceOfCallTC",
+		Weight:  10,
+		Fn:      klapTC.KlapBalanceOfCall,
+		Init:    klapTC.Init,
+		AccGrp:  accGrpForSignedTx,
+		EndPint: gEndpoint,
+	})
+
+	taskSet = append(taskSet, &ExtendedTask {
+		Name:    "klapAppCall",
+		Weight:  10,
+		Fn:      klapTC.KlapAppCall,
+		Init:    klapTC.Init,
+		AccGrp:  accGrpForSignedTx,
+		EndPint: gEndpoint,
+	})
 	return taskSet
 }
 

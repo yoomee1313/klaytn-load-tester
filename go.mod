@@ -5,7 +5,7 @@ go 1.15
 require (
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef // indirect
 	github.com/google/uuid v1.1.2 // indirect
-	github.com/klaytn/klaytn v1.8.0-rc.4
+	github.com/klaytn/klaytn v0.0.0
 	github.com/myzhan/boomer v0.0.0-20200828033921-b29cf430b44f
 	github.com/olekukonko/tablewriter v0.0.4 // indirect
 	github.com/shirou/gopsutil v3.21.11+incompatible // indirect
@@ -16,4 +16,8 @@ require (
 	github.com/zeromq/gomq v0.0.0-20201031135124-cef4e507bb8e // indirect
 	github.com/zeromq/gomq/zmtp v0.0.0-20201031135124-cef4e507bb8e // indirect
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
+)
+
+replace (
+	github.com/klaytn/klaytn v0.0.0 => /Users/yumiel/workdir/klaytn
 )
