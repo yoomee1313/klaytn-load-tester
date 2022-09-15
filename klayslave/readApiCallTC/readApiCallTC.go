@@ -11,13 +11,19 @@ import (
 	"sync"
 	"time"
 
+	"github.com/klaytn/klaytn"
 	"github.com/klaytn/klaytn-load-tester/klayslave/account"
 	"github.com/klaytn/klaytn-load-tester/klayslave/clipool"
 	"github.com/klaytn/klaytn/client"
+	"github.com/klaytn/klaytn/common"
 	"github.com/klaytn/klaytn/networks/rpc"
 	"github.com/myzhan/boomer"
 	"github.com/tidwall/gjson"
 )
+
+var contracts = []common.Address{common.HexToAddress("0xc6a2ad8cc6e4a7e08fc37cc5954be07d499e7654"),common.HexToAddress("0x422abb57e4bb7d46032852b884b7bb4cc4a39cc7"),common.HexToAddress("0x86b0f3dfddadb2e57b00a6d740f1a464f79179bf"),
+	common.HexToAddress("0xcee8faf64bb97a73bb51e115aa89c17ffa8dd167"),common.HexToAddress("0xf7cbb00b62376f41ddaba34fe16248ed4d82d422"),common.HexToAddress("0x97b4e13114ce2c9bf289be1ffd1268be5b2ed7c2"),
+	common.HexToAddress("0x2b5065d6049099295c68f5fcb97b8b0d3c354df7"),common.HexToAddress("0xbe7377db700664331beb28023cfbd46de079efac"),common.HexToAddress("0x9657fb399847d85a9c1a234ece9ca09d5c00f466")}
 
 var (
 	gasPrice *big.Int
@@ -66,12 +72,11 @@ func Init(accs []*account.Account, ep string, gp *big.Int) {
 func sendBoomerEvent(tcName string, logString string, elapsed int64, cli *rpc.Client, err error) {
 	if err == nil {
 		boomer.Events.Publish("request_success", "http", tcName+" to "+endPoint, elapsed, int64(10))
-		cliPool.Free(cli)
 	} else {
 		log.Printf("[TC] %s: %s, err=%v\n", tcName, logString, err)
 		boomer.Events.Publish("request_failure", "http", tcName+" to "+endPoint, elapsed, err.Error())
-		cli.Close()
 	}
+	cliPool.Free(cli)
 }
 
 func getRandomBlockNumber(cli *client.Client, ctx context.Context) *big.Int {
@@ -140,6 +145,48 @@ func GetBlockByNumber() {
 	sendBoomerEvent("readGetBlockByNumber", "Failed to call klay_getBlockByNumber", elapsed, rpcCli, err)
 }
 
+func GetBlockByNumberSpecific() {
+	ctx := context.Background()
+	rpcCli := cliPool.Alloc().(*rpc.Client)
+	cli := client.NewClient(rpcCli)
+
+	ansBN := big.NewInt(80771176)
+	start := boomer.Now()
+
+	block, err := cli.BlockByNumber(ctx, ansBN) //read the random block
+	if err == nil && block.Header().Number.Cmp(ansBN) != 0 {
+		err = errors.New("wrong block: 0x" + block.Header().Number.Text(16) + ", answer: 0x" + ansBN.Text(16))
+	}
+
+	elapsed := boomer.Now() - start
+	sendBoomerEvent("readGetBlockByNumberSpecific", "Failed to call klay_getBlockByNumber", elapsed, rpcCli, err)
+}
+
+func GetTransactionReceipt() {
+	ctx := context.Background()
+	rpcCli := cliPool.Alloc().(*rpc.Client)
+	cli := client.NewClient(rpcCli)
+
+	ansBN := getRandomBlockNumber(cli, ctx)
+	start := boomer.Now()
+
+	block, err := cli.BlockByNumber(ctx, ansBN) //read the random block
+	if err != nil {
+		sendBoomerEvent("readTransactionReceipt", "Failed to call klay_getBlockByNumber", 0, rpcCli, err)
+		return
+	}
+
+	for _, tx := range block.Transactions() {
+		_, err := cli.TransactionReceipt(ctx, tx.Hash())
+		if err != nil {
+			sendBoomerEvent("readTransactionReceipt", "Failed to call klay_getTransactionReceipt", 0, rpcCli, err)
+			return
+		}
+	}
+	elapsed := boomer.Now() - start
+	sendBoomerEvent("readTransactionReceipt", "Failed to call klay_getTransactionReceipt", elapsed, rpcCli, err)
+}
+
 func GetAccount() {
 	ctx := context.Background()
 	rpcCli := cliPool.Alloc().(*rpc.Client)
@@ -163,8 +210,9 @@ func GetAccount() {
 func GetBlockWithConsensusInfoByNumber() {
 	ctx := context.Background()
 	rpcCli := cliPool.Alloc().(*rpc.Client)
+	cli := client.NewClient(rpcCli)
 
-	ansBN := getRandomBlockNumber(client.NewClient(rpcCli), ctx)
+	ansBN := getRandomBlockNumber(cli, ctx)
 	start := boomer.Now()
 
 	var j json.RawMessage
@@ -179,4 +227,66 @@ func GetBlockWithConsensusInfoByNumber() {
 	elapsed := boomer.Now() - start
 	sendBoomerEvent("readGetBlockWithConsensusInfoByNumber",
 		"Failed to call klay_GetBlockWithConsensusInfoByNumber", elapsed, rpcCli, err)
+}
+
+func GetBlockWithConsensusInfoByNumberRange() {
+	ctx := context.Background()
+	rpcCli := cliPool.Alloc().(*rpc.Client)
+	cli := client.NewClient(rpcCli)
+
+	ansBNFrom := getRandomBlockNumber(cli, ctx)
+	ansBNTo := ansBNFrom.Add(ansBNFrom,big.NewInt(5))
+	if ansBNTo.Cmp(latestBlockNumber) == 1{
+		ansBNTo = latestBlockNumber
+	}
+
+	start := boomer.Now()
+
+	var j json.RawMessage
+	err := rpcCli.CallContext(ctx, &j, "klay_getBlockWithConsensusInfoByNumberRange", "0x"+ansBNFrom.Text(16), "0x"+ansBNTo.Text(16))
+
+	elapsed := boomer.Now() - start
+	sendBoomerEvent("readGetBlockWithConsensusInfoByNumberRange",
+		"Failed to call klay_GetBlockWithConsensusInfoByNumberRange", elapsed, rpcCli, err)
+}
+
+func GetLogs() {
+	ctx := context.Background()
+	rpcCli := cliPool.Alloc().(*rpc.Client)
+
+	ansBNFrom := getRandomBlockNumber(client.NewClient(rpcCli), ctx)
+	ansBNTo := ansBNFrom.Add(ansBNFrom,big.NewInt(100))
+	if ansBNTo.Cmp(latestBlockNumber) == 1{
+		ansBNTo = latestBlockNumber
+	}
+
+	start := boomer.Now()
+
+	var j json.RawMessage
+
+	filter := klaytn.FilterQuery{FromBlock: ansBNFrom, ToBlock: ansBNTo, Addresses: contracts}
+	err := rpcCli.CallContext(ctx, &j, "klay_getLogs", filter)
+
+	elapsed := boomer.Now() - start
+	sendBoomerEvent("readGetLogs",
+		"Failed to call klay_getLogs", elapsed, rpcCli, err)
+}
+
+func GetLogsSpecific() {
+	ctx := context.Background()
+	rpcCli := cliPool.Alloc().(*rpc.Client)
+
+	ansBNFrom := big.NewInt(99500500)
+	ansBNTo := big.NewInt(100060308)
+
+	start := boomer.Now()
+
+	var j json.RawMessage
+
+	filter := klaytn.FilterQuery{FromBlock: ansBNFrom, ToBlock: ansBNTo, Addresses: []common.Address{common.HexToAddress("0x422abb57e4bb7d46032852b884b7bb4cc4a39cc7")}}
+	err := rpcCli.CallContext(ctx, &j, "klay_getLogs", filter)
+
+	elapsed := boomer.Now() - start
+	sendBoomerEvent("readGetLogsSpecific",
+		"Failed to call klay_getLogs", elapsed, rpcCli, err)
 }
