@@ -1163,7 +1163,7 @@ func initTCList() (taskSet []*ExtendedTask) {
 	})
 
 	taskSet = append(taskSet, &ExtendedTask{
-		Name:    "klapAppCall",
+		Name:    "klapAppCallTC",
 		Weight:  10,
 		Fn:      klapTC.KlapAppCall,
 		Init:    klapTC.Init,
@@ -1189,6 +1189,14 @@ func initTCList() (taskSet []*ExtendedTask) {
 		EndPint: gEndpoint,
 	})
 
+	taskSet = append(taskSet, &ExtendedTask {
+		Name:    "klapAppCallAdditionalTC",
+		Weight:  10,
+		Fn:      klapTC.KlapAppCallAdditional,
+		Init:    klapTC.Init,
+		AccGrp:  accGrpForSignedTx,
+		EndPint: gEndpoint,
+	})
 	return taskSet
 }
 

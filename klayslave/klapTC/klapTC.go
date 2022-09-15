@@ -11,7 +11,6 @@ import (
 
 	"github.com/klaytn/klaytn"
 	"github.com/klaytn/klaytn/accounts/abi"
-	"github.com/klaytn/klaytn/accounts/abi/bind"
 	"github.com/klaytn/klaytn/client"
 	"github.com/klaytn/klaytn/common"
 	"github.com/myzhan/boomer"
@@ -72,59 +71,47 @@ func KlapBalanceOfCall() {
 	ctx := context.Background()
 	cli := cliPool.Alloc().(*client.Client)
 
-	// fromAccount := accGrp[rand.Int()%nAcc]
-	fromAccount := Klap_account_list[rand.Int()%3612]
+	klapAccount := Klap_account_list[rand.Int()%len(Klap_account_list)]
 	contractAddr := common.HexToAddress("0xd109065ee17e2dc20b3472a4d4fb5907bd687d09")
-	data, err := GenerateData(fromAccount)
+	data, err := GenerateData(klapAccount)
 	if err != nil {
 		panic("failed to generate data field of klaytn argument")
 	}
 	callMsg := klaytn.CallMsg{
-		From:     fromAccount,
 		To:       &contractAddr,
 		Gas:      1100000,
 		GasPrice: gasPrice,
 		Value:    big.NewInt(0),
 		Data:     data,
 	}
-	var callopts bind.CallOpts
-	callopts.Pending = false
-	callopts.From = fromAccount
 
 	start := boomer.Now()
 	_, err = cli.CallContract(ctx, callMsg, nil) // call at latest
 	elapsed := boomer.Now() - start
 
 	if err == nil {
-		boomer.Events.Publish("request_success", "http", "klapTC to "+endPoint, elapsed, int64(10))
-		cliPool.Free(cli)
+		boomer.Events.Publish("request_success", "http", "klapBalanceOfCallTC to "+endPoint, elapsed, int64(10))
 	} else {
-		log.Printf("[TC] klapTC: Failed to call klay_call, err=%v, from:%x\n", err, fromAccount)
-		boomer.Events.Publish("request_failure", "http", "klapTC to "+endPoint, elapsed, err.Error())
-		cli.Close()
+		log.Printf("[TC] klapTC: Failed to call klay_call, err=%v, from:%x\n", err,account)
+		boomer.Events.Publish("request_failure", "http", "klapBalanceOfCallTC to "+endPoint, elapsed, err.Error())
 	}
+	cliPool.Free(cli)
 }
 func KlapAppCall() {
 	ctx := context.Background()
 	cli := cliPool.Alloc().(*client.Client)
 
-	fromAccount := accGrp[rand.Int()%nAcc].GetAddress()
-
-	idx := rand.Int() % 7
+	idx := rand.Int()%len(ContractAddrList)
 	contractAddr := ContractAddrList[idx]
 	data := DataList[idx]
 
 	callMsg := klaytn.CallMsg{
-		From:     fromAccount,
 		To:       &contractAddr,
 		Gas:      50000000,
 		GasPrice: gasPrice,
 		Value:    big.NewInt(0),
 		Data:     data,
 	}
-	var callopts bind.CallOpts
-	callopts.Pending = false
-	callopts.From = fromAccount
 
 	start := boomer.Now()
 	_, err := cli.CallContract(ctx, callMsg, nil) // call at latest
@@ -132,10 +119,38 @@ func KlapAppCall() {
 
 	if err == nil {
 		boomer.Events.Publish("request_success", "http", "klapAppCallTC to "+endPoint, elapsed, int64(10))
-		cliPool.Free(cli)
 	} else {
-		log.Printf("[TC] klapAppTC: Failed to call klay_call, err=%v, from:%x\n", err, fromAccount)
+		log.Printf("[TC] klapAppTC: Failed to call klay_call, err=%v\n", err)
 		boomer.Events.Publish("request_failure", "http", "klapAppCallTC to "+endPoint, elapsed, err.Error())
-		cli.Close()
 	}
+	cliPool.Free(cli)
+}
+
+func KlapAppCallAdditional() {
+	ctx := context.Background()
+	cli := cliPool.Alloc().(*client.Client)
+
+	idx := rand.Int()%len(ContractAddrListAdditional)
+	contractAddr := ContractAddrListAdditional[idx]
+	data := DataListAdditional[idx]
+
+	callMsg := klaytn.CallMsg{
+		To:       &contractAddr,
+		Gas:      50000000,
+		GasPrice: gasPrice,
+		Value:    big.NewInt(0),
+		Data:     data,
+	}
+
+	start := boomer.Now()
+	_, err := cli.CallContract(ctx, callMsg, nil) // call at latest
+	elapsed := boomer.Now() - start
+
+	if err == nil {
+		boomer.Events.Publish("request_success", "http", "klapAppCallAdditionalTC to "+endPoint, elapsed, int64(10))
+	} else {
+		log.Printf("[TC] klapAppTC: Failed to call klay_call, err=%v\n", err)
+		boomer.Events.Publish("request_failure", "http", "klapAppCallAdditionalTC to "+endPoint, elapsed, err.Error())
+	}
+	cliPool.Free(cli)
 }
