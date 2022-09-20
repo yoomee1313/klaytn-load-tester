@@ -1179,6 +1179,15 @@ func initTCList() (taskSet []*ExtendedTask) {
 	})
 
 	taskSet = append(taskSet, &ExtendedTask{
+		Name:    "readGetBlockByNumberLatest",
+		Weight:  10,
+		Fn:      readApiCallTC.GetBlockByNumberLatest,
+		Init:    readApiCallTC.Init,
+		AccGrp:  accGrpForSignedTx,
+		EndPint: gEndpoint,
+	})
+
+	taskSet = append(taskSet, &ExtendedTask{
 		Name:    "readGetBlockByNumberSpecific",
 		Weight:  10,
 		Fn:      readApiCallTC.GetBlockByNumberSpecific,

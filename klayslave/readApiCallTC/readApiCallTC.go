@@ -145,6 +145,29 @@ func GetBlockByNumber() {
 	sendBoomerEvent("readGetBlockByNumber", "Failed to call klay_getBlockByNumber", elapsed, rpcCli, err)
 }
 
+func GetBlockByNumberLatest() {
+	ctx := context.Background()
+	rpcCli := cliPool.Alloc().(*rpc.Client)
+	cli := client.NewClient(rpcCli)
+
+	bn, err := cli.BlockNumber(ctx)
+	if err != nil {
+		log.Printf("Failed to update the current block number. err=%s\n", err)
+		sendBoomerEvent("readGetBlockByNumber", "Failed to get latest block number", 0, rpcCli, err)
+		return
+	}
+
+	start := boomer.Now()
+
+	block, err := cli.BlockByNumber(ctx, bn) //read the random block
+	if err == nil && block.Header().Number.Cmp(bn) != 0 {
+		err = errors.New("wrong block: 0x" + block.Header().Number.Text(16) + ", answer: 0x" + bn.Text(16))
+	}
+
+	elapsed := boomer.Now() - start
+	sendBoomerEvent("readGetBlockByNumber", "Failed to call klay_getBlockByNumber", elapsed, rpcCli, err)
+}
+
 func GetBlockByNumberSpecific() {
 	ctx := context.Background()
 	rpcCli := cliPool.Alloc().(*rpc.Client)
