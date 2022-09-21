@@ -299,14 +299,14 @@ func GetLogsSpecific() {
 	ctx := context.Background()
 	rpcCli := cliPool.Alloc().(*rpc.Client)
 
-	ansBNFrom := big.NewInt(99500500)
-	ansBNTo := big.NewInt(100060308)
+	ansBNFrom := big.NewInt(70334930)
+	ansBNTo   := big.NewInt(70940930)
 
 	start := boomer.Now()
 
 	var j json.RawMessage
 
-	filter := klaytn.FilterQuery{FromBlock: ansBNFrom, ToBlock: ansBNTo, Addresses: []common.Address{common.HexToAddress("0x422abb57e4bb7d46032852b884b7bb4cc4a39cc7")}}
+	filter := klaytn.FilterQuery{FromBlock: ansBNFrom, ToBlock: ansBNTo, Addresses: []common.Address{common.HexToAddress("0x3737811657e9d3e9638144411307838cbce13775")}}
 	err := rpcCli.CallContext(ctx, &j, "klay_getLogs", filter)
 
 	elapsed := boomer.Now() - start
