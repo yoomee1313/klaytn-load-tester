@@ -168,12 +168,12 @@ func GetBlockByNumberLatest() {
 	sendBoomerEvent("readGetBlockByNumber", "Failed to call klay_getBlockByNumber", elapsed, rpcCli, err)
 }
 
-func GetBlockByNumberSpecific() {
+func GetBlockByNumber_1() {
 	ctx := context.Background()
 	rpcCli := cliPool.Alloc().(*rpc.Client)
 	cli := client.NewClient(rpcCli)
 
-	ansBN := big.NewInt(80771176)
+	ansBN := big.NewInt(80771176) //size 1864312
 	start := boomer.Now()
 
 	block, err := cli.BlockByNumber(ctx, ansBN) //read the random block
@@ -182,7 +182,58 @@ func GetBlockByNumberSpecific() {
 	}
 
 	elapsed := boomer.Now() - start
-	sendBoomerEvent("readGetBlockByNumberSpecific", "Failed to call klay_getBlockByNumber", elapsed, rpcCli, err)
+	sendBoomerEvent("readGetBlockByNumber_1", "Failed to call klay_getBlockByNumber", elapsed, rpcCli, err)
+}
+
+func GetBlockByNumber_2() {
+	ctx := context.Background()
+	rpcCli := cliPool.Alloc().(*rpc.Client)
+	cli := client.NewClient(rpcCli)
+
+	ansBN := big.NewInt(78771176) //size 927300
+	start := boomer.Now()
+
+	block, err := cli.BlockByNumber(ctx, ansBN) //read the random block
+	if err == nil && block.Header().Number.Cmp(ansBN) != 0 {
+		err = errors.New("wrong block: 0x" + block.Header().Number.Text(16) + ", answer: 0x" + ansBN.Text(16))
+	}
+
+	elapsed := boomer.Now() - start
+	sendBoomerEvent("readGetBlockByNumber_2", "Failed to call klay_getBlockByNumber", elapsed, rpcCli, err)
+}
+
+func GetBlockByNumber_3() {
+	ctx := context.Background()
+	rpcCli := cliPool.Alloc().(*rpc.Client)
+	cli := client.NewClient(rpcCli)
+
+	ansBN := big.NewInt(78771189) //size 378906
+	start := boomer.Now()
+
+	block, err := cli.BlockByNumber(ctx, ansBN) //read the random block
+	if err == nil && block.Header().Number.Cmp(ansBN) != 0 {
+		err = errors.New("wrong block: 0x" + block.Header().Number.Text(16) + ", answer: 0x" + ansBN.Text(16))
+	}
+
+	elapsed := boomer.Now() - start
+	sendBoomerEvent("readGetBlockByNumber_3", "Failed to call klay_getBlockByNumber", elapsed, rpcCli, err)
+}
+
+func GetBlockByNumber_4() {
+	ctx := context.Background()
+	rpcCli := cliPool.Alloc().(*rpc.Client)
+	cli := client.NewClient(rpcCli)
+
+	ansBN := big.NewInt(78771188) //size 156057
+	start := boomer.Now()
+
+	block, err := cli.BlockByNumber(ctx, ansBN) //read the random block
+	if err == nil && block.Header().Number.Cmp(ansBN) != 0 {
+		err = errors.New("wrong block: 0x" + block.Header().Number.Text(16) + ", answer: 0x" + ansBN.Text(16))
+	}
+
+	elapsed := boomer.Now() - start
+	sendBoomerEvent("readGetBlockByNumber_4", "Failed to call klay_getBlockByNumber", elapsed, rpcCli, err)
 }
 
 func GetTransactionReceipt() {
