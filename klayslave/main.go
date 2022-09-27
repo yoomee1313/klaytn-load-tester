@@ -1221,9 +1221,9 @@ func initTCList() (taskSet []*ExtendedTask) {
 	})
 
 	taskSet = append(taskSet, &ExtendedTask{
-		Name:    "readGetTransactionReceipt",
+		Name:    "readGetBlockReceiptsLatest",
 		Weight:  10,
-		Fn:      readApiCallTC.GetTransactionReceipt,
+		Fn:      readApiCallTC.GetBlockReceiptsLatest,
 		Init:    readApiCallTC.Init,
 		AccGrp:  accGrpForSignedTx,
 		EndPint: gEndpoint,

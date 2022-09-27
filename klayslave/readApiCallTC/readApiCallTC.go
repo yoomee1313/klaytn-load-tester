@@ -152,8 +152,7 @@ func GetBlockByNumberLatest() {
 
 	bn, err := cli.BlockNumber(ctx)
 	if err != nil {
-		log.Printf("Failed to update the current block number. err=%s\n", err)
-		sendBoomerEvent("readGetBlockByNumber", "Failed to get latest block number", 0, rpcCli, err)
+		sendBoomerEvent("readGetBlockByNumberLatest", "Failed to get latest block number", 0, rpcCli, err)
 		return
 	}
 
@@ -165,7 +164,7 @@ func GetBlockByNumberLatest() {
 	}
 
 	elapsed := boomer.Now() - start
-	sendBoomerEvent("readGetBlockByNumber", "Failed to call klay_getBlockByNumber", elapsed, rpcCli, err)
+	sendBoomerEvent("readGetBlockByNumberLatest", "Failed to call klay_getBlockByNumber", elapsed, rpcCli, err)
 }
 
 func GetBlockByNumber_1() {
@@ -236,29 +235,27 @@ func GetBlockByNumber_4() {
 	sendBoomerEvent("readGetBlockByNumber_4", "Failed to call klay_getBlockByNumber", elapsed, rpcCli, err)
 }
 
-func GetTransactionReceipt() {
+func GetBlockReceiptsLatest() {
 	ctx := context.Background()
 	rpcCli := cliPool.Alloc().(*rpc.Client)
 	cli := client.NewClient(rpcCli)
 
-	ansBN := getRandomBlockNumber(cli, ctx)
-	start := boomer.Now()
-
-	block, err := cli.BlockByNumber(ctx, ansBN) //read the random block
+	bn, err := cli.BlockNumber(ctx)
 	if err != nil {
-		sendBoomerEvent("readTransactionReceipt", "Failed to call klay_getBlockByNumber", 0, rpcCli, err)
+		sendBoomerEvent("readBlockReceiptsLatest", "Failed to get the latest block number", 0, rpcCli, err)
+		return
+	}
+	block, err := cli.BlockByNumber(ctx, bn) // read the latest block
+	if err != nil {
+		sendBoomerEvent("readBlockReceiptsLatest", "Failed to call klay_getBlockByNumber", 0, rpcCli, err)
 		return
 	}
 
-	for _, tx := range block.Transactions() {
-		_, err := cli.TransactionReceipt(ctx, tx.Hash())
-		if err != nil {
-			sendBoomerEvent("readTransactionReceipt", "Failed to call klay_getTransactionReceipt", 0, rpcCli, err)
-			return
-		}
-	}
+	start := boomer.Now()
+	var j json.RawMessage
+	err = rpcCli.CallContext(ctx, &j, "klay_getBlockReceipts", block.Hash().String())
 	elapsed := boomer.Now() - start
-	sendBoomerEvent("readTransactionReceipt", "Failed to call klay_getTransactionReceipt", elapsed, rpcCli, err)
+	sendBoomerEvent("readBlockReceiptsLatest", "Failed to call klay_getBlockReceipts", elapsed, rpcCli, err)
 }
 
 func GetAccount() {
