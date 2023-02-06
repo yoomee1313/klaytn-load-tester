@@ -229,6 +229,10 @@ func chargeKLAYToTestAccounts(accGrp map[common.Address]*account.Account) {
 			numChargedAcc, lastFailedNum = estimateRemainingTime(accGrp, numChargedAcc, lastFailedNum)
 		}
 		numChargedAcc++
+		if numChargedAcc % 20000 == 0 {
+			time.Sleep(time.Second*5)
+			log.Printf("It has charged 20000 test accounts.. let's take a break for 5 seconds")
+		}
 	}
 
 	log.Printf("Finished charging KLAY to %d test account(s), Total %d transactions are sent.\n", len(accGrp), numChargedAcc)
