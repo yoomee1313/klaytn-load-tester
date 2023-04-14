@@ -508,24 +508,22 @@ func updateChainID() {
 
 func updateGasPrice() {
 	// TODO: refactor to updating gasPrice with goverance.magma.upperboundbasefee
-	gasPrice = big.NewInt(750000000000)
+	gasPrice = big.NewInt(25000000000)
 
-	/* Deprecated because of KIP-71 hardfork
-	fmt.Println("Updating GasPrice from RPC")
-	for {
-		ctx := context.Background()
-		gp, err := gCli.SuggestGasPrice(ctx)
-
-		if err == nil {
-			gasPrice = gp
-			fmt.Println("gas price :", gasPrice.String())
-			break
-		}
-		fmt.Println("Retrying updating GasPrice... ERR: ", err)
-
-		time.Sleep(2 * time.Second)
-	}
-	*/
+	//fmt.Println("Updating GasPrice from RPC")
+	//for {
+	//	ctx := context.Background()
+	//	gp, err := gCli.SuggestGasPrice(ctx)
+	//
+	//	if err == nil {
+	//		gasPrice = gp
+	//		fmt.Println("gas price :", gasPrice.String())
+	//		break
+	//	}
+	//	fmt.Println("Retrying updating GasPrice... ERR: ", err)
+	//
+	//	time.Sleep(2 * time.Second)
+	//}
 	account.SetGasPrice(gasPrice)
 }
 
