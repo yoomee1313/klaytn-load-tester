@@ -258,6 +258,29 @@ func GetBlockReceiptsLatest() {
 	sendBoomerEvent("readBlockReceiptsLatest", "Failed to call klay_getBlockReceipts", elapsed, rpcCli, err)
 }
 
+func GetTraceLatestBlock() {
+	ctx := context.Background()
+	rpcCli := cliPool.Alloc().(*rpc.Client)
+	cli := client.NewClient(rpcCli)
+
+	bn, err := cli.BlockNumber(ctx)
+	if err != nil {
+		sendBoomerEvent("readGetTraceLatestBlock", "Failed to get the latest block number", 0, rpcCli, err)
+		return
+	}
+	block, err := cli.BlockByNumber(ctx, bn) // read the latest block
+	if err != nil {
+		sendBoomerEvent("readGetTraceLatestBlock", "Failed to call klay_getBlockByNumber", 0, rpcCli, err)
+		return
+	}
+
+	start := boomer.Now()
+	var j json.RawMessage
+	err = rpcCli.CallContext(ctx, &j, "debug_traceBlockByNumber", block.NumberU64())
+	elapsed := boomer.Now() - start
+	sendBoomerEvent("readGetTraceLatestBlock", "Failed to call debug_traceBlockByNumber", elapsed, rpcCli, err)
+}
+
 func GetAccount() {
 	ctx := context.Background()
 	rpcCli := cliPool.Alloc().(*rpc.Client)
@@ -339,8 +362,7 @@ func GetLogs() {
 	err := rpcCli.CallContext(ctx, &j, "klay_getLogs", filter)
 
 	elapsed := boomer.Now() - start
-	sendBoomerEvent("readGetLogs",
-		"Failed to call klay_getLogs", elapsed, rpcCli, err)
+	sendBoomerEvent("readGetLogs", "Failed to call klay_getLogs", elapsed, rpcCli, err)
 }
 
 func GetLogsSpecific() {
@@ -358,6 +380,5 @@ func GetLogsSpecific() {
 	err := rpcCli.CallContext(ctx, &j, "klay_getLogs", filter)
 
 	elapsed := boomer.Now() - start
-	sendBoomerEvent("readGetLogsSpecific",
-		"Failed to call klay_getLogs", elapsed, rpcCli, err)
+	sendBoomerEvent("readGetLogsSpecific", "Failed to call klay_getLogs", elapsed, rpcCli, err)
 }
