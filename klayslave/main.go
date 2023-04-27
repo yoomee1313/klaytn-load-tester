@@ -1247,9 +1247,9 @@ func initTCList() (taskSet []*ExtendedTask) {
 		EndPint: gEndpoint,
 	})
 	taskSet = append(taskSet, &ExtendedTask{
-		Name:    "readGetLogsSpecific",
+		Name:    "readGetLogsHeavy",
 		Weight:  10,
-		Fn:      readApiCallTC.GetLogsSpecific,
+		Fn:      readApiCallTC.GetLogsHeavy,
 		Init:    readApiCallTC.Init,
 		AccGrp:  accGrpForSignedTx,
 		EndPint: gEndpoint,

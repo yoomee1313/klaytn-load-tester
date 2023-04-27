@@ -37,6 +37,7 @@ var (
 	accGrp []*account.Account
 
 	latestBlockNumber *big.Int
+	getLogsBlockNumber *big.Int
 	count             uint64
 )
 
@@ -49,7 +50,6 @@ func Init(accs []*account.Account, ep string, gp *big.Int) {
 	}
 	initialized = true
 
-	latestBlockNumber = big.NewInt(0)
 	count = 0
 	gasPrice = gp
 	endPoint = ep
@@ -67,6 +67,15 @@ func Init(accs []*account.Account, ep string, gp *big.Int) {
 		accGrp = append(accGrp, acc)
 	}
 	nAcc = len(accGrp)
+
+	ctx := context.Background()
+	rpcCli := cliPool.Alloc().(*rpc.Client)
+	cli := client.NewClient(rpcCli)
+	latestBlockNumber, err := cli.BlockNumber(ctx)
+	getLogsBlockNumber = latestBlockNumber
+	if err != nil {
+		log.Fatalf("Failed to get latest block number: %v", err)
+	}
 }
 
 func sendBoomerEvent(tcName string, logString string, elapsed int64, cli *rpc.Client, err error) {
@@ -276,7 +285,7 @@ func GetTraceLatestBlock() {
 
 	start := boomer.Now()
 	var j json.RawMessage
-	err = rpcCli.CallContext(ctx, &j, "debug_traceBlockByNumber", block.NumberU64())
+	err = rpcCli.CallContext(ctx, &j, "debug_traceBlockByNumber", block.NumberU64(), map[string]interface{}{"tracer": "fastCallTracer"})
 	elapsed := boomer.Now() - start
 	sendBoomerEvent("readGetTraceLatestBlock", "Failed to call debug_traceBlockByNumber", elapsed, rpcCli, err)
 }
@@ -347,38 +356,34 @@ func GetBlockWithConsensusInfoByNumberRange() {
 func GetLogs() {
 	ctx := context.Background()
 	rpcCli := cliPool.Alloc().(*rpc.Client)
-
-	ansBNFrom := getRandomBlockNumber(client.NewClient(rpcCli), ctx)
-	ansBNTo := ansBNFrom.Add(ansBNFrom,big.NewInt(100))
-	if ansBNTo.Cmp(latestBlockNumber) == 1{
-		ansBNTo = latestBlockNumber
-	}
+	cli := client.NewClient(rpcCli)
 
 	start := boomer.Now()
 
-	var j json.RawMessage
-
-	filter := klaytn.FilterQuery{FromBlock: ansBNFrom, ToBlock: ansBNTo, Addresses: contracts}
-	err := rpcCli.CallContext(ctx, &j, "klay_getLogs", filter)
-
+	filter := klaytn.FilterQuery{ FromBlock:getLogsBlockNumber, ToBlock:getLogsBlockNumber}
+	_, err := cli.FilterLogs(ctx, filter)
 	elapsed := boomer.Now() - start
 	sendBoomerEvent("readGetLogs", "Failed to call klay_getLogs", elapsed, rpcCli, err)
 }
 
-func GetLogsSpecific() {
+// GetLogsHeavy assumes next case
+// * The service collects the log once a day.
+// * So, it calls the klay_getLogs for ranges.
+func GetLogsHeavy() {
 	ctx := context.Background()
 	rpcCli := cliPool.Alloc().(*rpc.Client)
-
-	ansBNFrom := big.NewInt(70334930)
-	ansBNTo   := big.NewInt(70940930)
+	cli := client.NewClient(rpcCli)
 
 	start := boomer.Now()
 
-	var j json.RawMessage
+	mutex.Lock()
+	to := big.NewInt(getLogsBlockNumber.Int64())
+	getLogsBlockNumber.Sub(getLogsBlockNumber, big.NewInt(100))
+	from := getLogsBlockNumber
+	mutex.Unlock()
 
-	filter := klaytn.FilterQuery{FromBlock: ansBNFrom, ToBlock: ansBNTo, Addresses: []common.Address{common.HexToAddress("0x3737811657e9d3e9638144411307838cbce13775")}}
-	err := rpcCli.CallContext(ctx, &j, "klay_getLogs", filter)
+	_, err := cli.FilterLogs(ctx, klaytn.FilterQuery{ FromBlock:from, ToBlock:to})
 
 	elapsed := boomer.Now() - start
-	sendBoomerEvent("readGetLogsSpecific", "Failed to call klay_getLogs", elapsed, rpcCli, err)
+	sendBoomerEvent("readGetLogsHeavy", "Failed to call klay_getLogs", elapsed, rpcCli, err)
 }
