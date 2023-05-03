@@ -267,7 +267,7 @@ func GetBlockReceiptsLatest() {
 	sendBoomerEvent("readBlockReceiptsLatest", "Failed to call klay_getBlockReceipts", elapsed, rpcCli, err)
 }
 
-func GetTraceLatestBlock() {
+func GetTraceBlockLatest() {
 	ctx := context.Background()
 	rpcCli := cliPool.Alloc().(*rpc.Client)
 	cli := client.NewClient(rpcCli)
@@ -353,17 +353,21 @@ func GetBlockWithConsensusInfoByNumberRange() {
 		"Failed to call klay_GetBlockWithConsensusInfoByNumberRange", elapsed, rpcCli, err)
 }
 
-func GetLogs() {
+func GetLogsLatest() {
 	ctx := context.Background()
 	rpcCli := cliPool.Alloc().(*rpc.Client)
 	cli := client.NewClient(rpcCli)
 
 	start := boomer.Now()
-
-	filter := klaytn.FilterQuery{ FromBlock:getLogsBlockNumber, ToBlock:getLogsBlockNumber}
-	_, err := cli.FilterLogs(ctx, filter)
+	bn, err := cli.BlockNumber(ctx)
+	if err != nil {
+		sendBoomerEvent("readGetLogsLatest", "Failed to get the latest block number", 0, rpcCli, err)
+		return
+	}
+	filter := klaytn.FilterQuery{ FromBlock:bn, ToBlock:bn}
+	_, err = cli.FilterLogs(ctx, filter)
 	elapsed := boomer.Now() - start
-	sendBoomerEvent("readGetLogs", "Failed to call klay_getLogs", elapsed, rpcCli, err)
+	sendBoomerEvent("readGetLogsLatest", "Failed to call klay_getLogs", elapsed, rpcCli, err)
 }
 
 // GetLogsHeavy assumes next case
@@ -382,7 +386,7 @@ func GetLogsHeavy() {
 	from := getLogsBlockNumber
 	mutex.Unlock()
 
-	_, err := cli.FilterLogs(ctx, klaytn.FilterQuery{ FromBlock:from, ToBlock:to})
+	_, err := cli.FilterLogs(ctx, klaytn.FilterQuery{FromBlock:from, ToBlock:to})
 
 	elapsed := boomer.Now() - start
 	sendBoomerEvent("readGetLogsHeavy", "Failed to call klay_getLogs", elapsed, rpcCli, err)

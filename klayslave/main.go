@@ -1239,9 +1239,9 @@ func initTCList() (taskSet []*ExtendedTask) {
 	})
 
 	taskSet = append(taskSet, &ExtendedTask{
-		Name:    "readGetLogs",
+		Name:    "readGetLogsLatest",
 		Weight:  10,
-		Fn:      readApiCallTC.GetLogs,
+		Fn:      readApiCallTC.GetLogsLatest,
 		Init:    readApiCallTC.Init,
 		AccGrp:  accGrpForSignedTx,
 		EndPint: gEndpoint,
@@ -1255,9 +1255,9 @@ func initTCList() (taskSet []*ExtendedTask) {
 		EndPint: gEndpoint,
 	})
 	taskSet = append(taskSet, &ExtendedTask{
-		Name:    "readGetTraceLatestBlock",
+		Name:    "readGetTraceBlockLatest",
 		Weight:  10,
-		Fn:      readApiCallTC.GetTraceLatestBlock,
+		Fn:      readApiCallTC.GetTraceBlockLatest,
 		Init:    readApiCallTC.Init,
 		AccGrp:  accGrpForSignedTx,
 		EndPint: gEndpoint,
