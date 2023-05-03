@@ -370,6 +370,46 @@ func GetLogsLatest() {
 	sendBoomerEvent("readGetLogsLatest", "Failed to call klay_getLogs", elapsed, rpcCli, err)
 }
 
+func GetTransactionReceipt() {
+	ctx := context.Background()
+	rpcCli := cliPool.Alloc().(*rpc.Client)
+	cli := client.NewClient(rpcCli)
+
+	start := boomer.Now()
+	bn, err := cli.BlockNumber(ctx)
+	if err != nil {
+		sendBoomerEvent("readGetTransactionReceipt", "Failed to get the latest block number", 0, rpcCli, err)
+		return
+	}
+
+	block, err := cli.BlockByNumber(ctx, bn) // read the latest block
+	if err != nil {
+		sendBoomerEvent("readGetTransactionReceipt", "Failed to call klay_getBlockByNumber", 0, rpcCli, err)
+		return
+	}
+
+	_, err = cli.TransactionCount(ctx, block.Hash())
+	if err != nil {
+		sendBoomerEvent("readGetTransactionReceipt", "Failed to call klay_getTransactionCount", 0, rpcCli, err)
+		return
+	}
+
+	for _, tx := range block.Transactions() {
+		_, _, err := cli.TransactionByHash(ctx, tx.Hash())
+		if err != nil {
+			sendBoomerEvent("readGetTransactionReceipt", "Failed to call klay_getTransactionByHash", 0, rpcCli, err)
+			return
+		}
+		_, err = cli.TransactionReceipt(ctx, tx.Hash())
+		if err != nil {
+			sendBoomerEvent("readGetTransactionReceipt", "Failed to call klay_getTransactionReceipt", 0, rpcCli, err)
+			return
+		}
+	}
+	elapsed := boomer.Now() - start
+	sendBoomerEvent("readBlockReceiptsLatest", "Failed to call klay_getBlockReceipts", elapsed, rpcCli, err)
+}
+
 // GetLogsHeavy assumes next case
 // * The service collects the log once a day.
 // * So, it calls the klay_getLogs for ranges.
