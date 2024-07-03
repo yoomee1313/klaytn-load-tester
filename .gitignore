@@ -28,5 +28,5 @@ _testmain.go
 .idea
 
 # Compiled KlaySlave
-klayslave/klayslave
+testcases/klayslave
 build/bin/
