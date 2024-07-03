@@ -106,13 +106,13 @@ var ERC20DeployPrivateKeyStr = "eb2c84d41c639178ff26a81f488c196584d678bb1390cc20
 var ERC721DeployPrivateKeyStr = "45c40d95c9b7898a21e073b5bf952bcb05f2e70072e239a8bbd87bb74a53355e"
 
 // prepareERC20Transfer sets up ERC20 transfer performance test.
-func prepareERC20Transfer(accGrp map[common.Address]*account.Account) {
+func prepareERC20Transfer(accGrp []*account.Account) {
 	if !inTheTCList(erc20TransferTC.Name) {
 		return
 	}
 	erc20DeployAcc := account.GetAccountFromKey(0, ERC20DeployPrivateKeyStr)
 	log.Printf("prepareERC20Transfer", "addr", erc20DeployAcc.GetAddress().String())
-	chargeKLAYToTestAccounts(map[common.Address]*account.Account{erc20DeployAcc.GetAddress(): erc20DeployAcc})
+	chargeKLAYToTestAccounts([]*account.Account{erc20DeployAcc})
 
 	// A smart contract for ERC20 value transfer performance TC.
 	erc20TransferTC.SmartContractAccount = deploySingleSmartContract(erc20DeployAcc, erc20DeployAcc.DeployERC20, "ERC20 Performance Test Contract")
@@ -129,7 +129,7 @@ func prepareERC721Transfer(accGrp []*account.Account) {
 	}
 	erc721DeployAcc := account.GetAccountFromKey(0, ERC721DeployPrivateKeyStr)
 	log.Printf("prepareERC721Transfer", "addr", erc721DeployAcc.GetAddress().String())
-	chargeKLAYToTestAccounts(map[common.Address]*account.Account{erc721DeployAcc.GetAddress(): erc721DeployAcc})
+	chargeKLAYToTestAccounts([]*account.Account{erc721DeployAcc})
 
 	// A smart contract for ERC721 value transfer performance TC.
 	erc721TransferTC.SmartContractAccount = deploySingleSmartContract(erc721DeployAcc, erc721DeployAcc.DeployERC721, "ERC721 Performance Test Contract")
@@ -144,26 +144,26 @@ func prepareERC721Transfer(accGrp []*account.Account) {
 var storageTrieDeployPrivateKeyStr = "3737c381633deaaa4c0bdbc64728f6ef7d381b17e1d30bbb74665839cec942b8"
 
 // prepareStorageTrieWritePerformance sets up ERC20 storage trie write performance test.
-func prepareStorageTrieWritePerformance(accGrp map[common.Address]*account.Account) {
+func prepareStorageTrieWritePerformance() {
 	if !inTheTCList(storageTrieWriteTC.Name) {
 		return
 	}
 	storageTrieDeployAcc := account.GetAccountFromKey(0, storageTrieDeployPrivateKeyStr)
 	log.Printf("prepareStorageTrieWritePerformance", "addr", storageTrieDeployAcc.GetAddress().String())
-	chargeKLAYToTestAccounts(map[common.Address]*account.Account{storageTrieDeployAcc.GetAddress(): storageTrieDeployAcc})
+	chargeKLAYToTestAccounts([]*account.Account{storageTrieDeployAcc})
 
 	// A smart contract for storage trie store performance TC.
 	storageTrieWriteTC.SmartContractAccount = deploySingleSmartContract(storageTrieDeployAcc, storageTrieDeployAcc.DeployStorageTrieWrite, "Storage Trie Performance Test Contract")
 }
 
-func prepareTestAccountsAndContracts(accGrp map[common.Address]*account.Account) {
+func prepareTestAccountsAndContracts(accGrp []*account.Account) {
 	// First, charging KLAY to the test accounts.
 	chargeKLAYToTestAccounts(accGrp)
 
 	// Second, deploy contracts used for some TCs.
 	// If the test case is not on the list, corresponding contract won't be deployed.
 	prepareERC20Transfer(accGrp)
-	prepareStorageTrieWritePerformance(accGrp)
+	prepareStorageTrieWritePerformance()
 
 	// Third, deploy contracts for general tests.
 	// A smart contract for general smart contract related TCs.
@@ -178,7 +178,7 @@ func prepareTestAccountsAndContracts(accGrp map[common.Address]*account.Account)
 	newEthereumDynamicFeeTC.SmartContractAccount = GeneralSmartContract
 }
 
-func chargeKLAYToTestAccounts(accGrp map[common.Address]*account.Account) {
+func chargeKLAYToTestAccounts(accGrp []*account.Account) {
 	log.Printf("Start charging KLAY to test accounts")
 
 	numChargedAcc := 0
@@ -228,7 +228,7 @@ func firstChargeTokenToTestAccounts(accGrp map[common.Address]*account.Account, 
 
 // chargeTokenToTestAccounts charges default token to the test accounts for testing.
 // As it is done independently among the slaves, it has simpler logic than firstChargeTokenToTestAccounts.
-func chargeTokenToTestAccounts(accGrp map[common.Address]*account.Account, tokenContractAddr common.Address, tokenChargeFn tokenChargeFunc, tokenChargeAmount *big.Int) {
+func chargeTokenToTestAccounts(accGrp []*account.Account, tokenContractAddr common.Address, tokenChargeFn tokenChargeFunc, tokenChargeAmount *big.Int) {
 	log.Printf("Start charging tokens to test accounts")
 
 	numChargedAcc := 0
@@ -247,7 +247,7 @@ func chargeTokenToTestAccounts(accGrp map[common.Address]*account.Account, token
 	log.Printf("Finished charging tokens to %d test account(s), Total %d transactions are sent.\n", len(accGrp), numChargedAcc)
 }
 
-func estimateRemainingTime(accGrp map[common.Address]*account.Account, numChargedAcc, lastFailedNum int) (int, int) {
+func estimateRemainingTime(accGrp []*account.Account, numChargedAcc, lastFailedNum int) (int, int) {
 	if lastFailedNum > 0 {
 		// Not 1st failed cases.
 		TPS := (numChargedAcc - lastFailedNum) / 5 // TPS of only this slave during `txpool is full` situation.
@@ -575,26 +575,25 @@ func main() {
 	// Set coinbase & Create Test Account
 	prepareAccounts()
 
-	filteredTask := tasks.NewFilteredTasks(tcStrList, accGrpForUnsignedTx, accGrpForSignedTx, gEndpoint)
+	filteredTask := tasks.NewFilteredTasks(tcStrList, accGrpForUnsignedTx, gEndpoint)
 
 	println("Adding tasks")
 
+	accGrp := append(accGrpForSignedTx, accGrpForUnsignedTx...)
 	if len(chargeValue.Bits()) != 0 {
-		prepareTestAccountsAndContracts(append(accGrpForSignedTx, accGrpForUnsignedTx))
+		prepareTestAccountsAndContracts(accGrp)
 	}
 	// After charging accounts, cut the slice to the desired length, calculated by ActiveAccountPercent.
-	for _, task := range filteredTask {
-		if activeUserPercent > 100 {
-			log.Fatalf("ActiveAccountPercent should be less than or equal to 100, but it is %v", activeUserPercent)
-		}
-		numActiveAccounts := len(task.AccGrp) * activeUserPercent / 100
-		// Not to assign 0 account for some cases.
-		if numActiveAccounts == 0 {
-			numActiveAccounts = 1
-		}
-		task.AccGrp = task.AccGrp[:numActiveAccounts]
-		prepareERC721Transfer(task.AccGrp)
+	if activeUserPercent > 100 {
+		log.Fatalf("ActiveAccountPercent should be less than or equal to 100, but it is %v", activeUserPercent)
 	}
+	numActiveAccounts := len(accGrp) * activeUserPercent / 100
+	// Not to assign 0 account for some cases.
+	if numActiveAccounts == 0 {
+		numActiveAccounts = 1
+	}
+	accGrp = accGrp[:numActiveAccounts]
+	prepareERC721Transfer(accGrp)
 
 	if len(filteredTask) == 0 {
 		log.Fatal("No Tc is set. Please set TcList. \nExample argument) -tc='" + tcNames + "'")
@@ -603,8 +602,7 @@ func main() {
 	println("Initializing tasks")
 	var filteredBoomerTask []*boomer.Task
 	for _, task := range filteredTask {
-
-		task.Init(task.AccGrp(), gEndpoint, gasPrice)
+		task.Init(accGrp, gEndpoint, gasPrice)
 		filteredBoomerTask = append(filteredBoomerTask, &boomer.Task{10, task.Fn, task.Name})
 		println("=> " + task.Name + " task is initialized.")
 	}

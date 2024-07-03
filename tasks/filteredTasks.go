@@ -10,7 +10,7 @@ import (
 
 type FilteredTasks []*ExtendedTask
 
-func NewFilteredTasks(tcStrLists []string, accGrpUnsigned []*account.Account, gEndpoint string) {
+func NewFilteredTasks(tcStrLists []string, accGrpUnsigned []*account.Account, gEndpoint string) FilteredTasks {
 	var filteredTasks FilteredTasks
 	for _, tc := range tcStrLists {
 		if task := validTasks[tc]; task != nil {
@@ -28,16 +28,10 @@ func NewFilteredTasks(tcStrLists []string, accGrpUnsigned []*account.Account, gE
 			break // to import/unlock once.
 		}
 	}
+	return filteredTasks
 }
 
 type ExtendedTask struct {
 	Init func([]*account.Account, string, *big.Int)
 	Task boomer.Task
-}
-
-func (et *ExtendedTask) GetAccGrp() {
-	if et.Task.Name == "transferUnsignedTx" {
-		return accGrpUnsigned
-	}
-	return accGrpSigned
 }
